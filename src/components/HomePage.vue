@@ -1,5 +1,14 @@
 <template>
 	<v-app id="app">
+		<v-alert
+	      :value="true"
+	      color="success"
+	      icon="check_circle"
+	      outline
+	      class="success_alert"
+	    >
+	      This is a success alert.
+	    </v-alert>
 		<v-container v-if="logged">
 			<v-layout row wrap>
 				<v-tabs fixed-tabs slider-color="blue">
@@ -51,7 +60,7 @@
 					password: this.password
 				});
 				
-				this.$router.push({name: 'StartPage'});
+				this.$router.push({name: 'LessonsMain'});
 				this.logged = true;
 			}
 		}
@@ -69,11 +78,20 @@
 	#app{
 		background-color: #fff;
 	}
+	.container{
+		padding: 10px 0;
+	}
 	.v-tabs__item a{
 	    display: flex;
 	    width: 100%;
 	    align-items: center;
 	    height: 100%;
 	    justify-content: center;
+	}
+	.success_alert{
+		position: absolute;
+		right: 15px;
+		z-index: 99;
+		background: #fff;
 	}
 </style>

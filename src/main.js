@@ -26,7 +26,7 @@ const router = new VueRouter({
 	  { path: '/HomePage', component: HomePage},
 	  { path: '/StartPage', component: StartPage, name: 'StartPage' },
 	  { path: '/LessonRating', component: LessonRating },
-	  { path: '/LessonsMain', component: LessonsMain },
+	  { path: '/LessonsMain', component: LessonsMain, name: 'LessonsMain' },
 	  { path: '/StudentsStatus', component: StudentsStatus }
 	]
 })
