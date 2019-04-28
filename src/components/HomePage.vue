@@ -1,14 +1,5 @@
 <template>
-	<v-app id="app">
-		<v-alert
-	      :value="true"
-	      color="success"
-	      icon="check_circle"
-	      outline
-	      class="success_alert"
-	    >
-	      This is a success alert.
-	    </v-alert>
+	<v-app id="app" v-on:message="message">
 		<v-container v-if="logged">
 			<v-layout row wrap>
 				<v-tabs fixed-tabs slider-color="blue">
@@ -55,13 +46,18 @@
 		},
 		methods:{
 			login(){
-				this.$store.dispatch('retrieveToken',{
-					email: this.email,
-					password: this.password
-				});
+				// this.$store.dispatch('retrieveToken',{
+				// 	email: this.email,
+				// 	password: this.password
+				// });
 				
 				this.$router.push({name: 'LessonsMain'});
 				this.logged = true;
+				this.$store.dispatch('getLessons')
+			},
+			message(){
+				console.log('data');
+				this.alertMessage = true;
 			}
 		}
 	}

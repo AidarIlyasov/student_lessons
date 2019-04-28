@@ -23,11 +23,11 @@ Vue.component('StudentsStatus',StudentsStatus);
 
 const router = new VueRouter({
 	routes: [
-	  { path: '/HomePage', component: HomePage},
-	  { path: '/StartPage', component: StartPage, name: 'StartPage' },
-	  { path: '/LessonRating', component: LessonRating },
-	  { path: '/LessonsMain', component: LessonsMain, name: 'LessonsMain' },
-	  { path: '/StudentsStatus', component: StudentsStatus }
+		{ path: '/HomePage', component: HomePage},
+		{ path: '/StartPage', component: StartPage, name: 'StartPage' },
+		{ path: '/LessonRating', component: LessonRating },
+		{ path: '/LessonsMain', component: LessonsMain, name: 'LessonsMain' },
+		{ path: '/StudentsStatus', component: StudentsStatus }
 	]
 })
 

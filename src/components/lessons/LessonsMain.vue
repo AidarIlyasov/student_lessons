@@ -1,5 +1,15 @@
 <template>
 	<v-container>
+		<v-alert v-show="message"
+	      :value="true"
+	      color="success"
+	      icon="check_circle"
+	      outline
+	      transition="slide-x-transition"
+	      class="success_alert"
+	    >
+	    {{ alertMessage }}
+	    </v-alert>
 		<v-layout row wrap>
 			<!-- <h1>Lessons Main</h1> -->
 			<v-flex md4>
@@ -42,18 +52,21 @@
 		<v-layout>
 			<table class="lessons_list">
 			  <tr v-for="(lesson,key) in lessons">
-			    <td class="date">{{ lesson.day }}</td>
+			    <td class="date">{{ lesson.date }}</td>
 			    <td class="day">{{  }}</td>
 			    <td class="time">
-			    	<span v-for="(time,key) in lesson.times">
-				    	<a href="#" @click.prevent="changeTime(0)">
+			    	<span>
+				    	<a href="#" @click.prevent="changeTime()">
 				    		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
 				    	</a>
-				    	{{ time }}
+				    	{{ lesson.start }}
 			    	</span>
 			    </td>
 			    <td class="location">
-			    	<a href="#" v-for="(location,key) in lesson.locations">{{ location }}</a>
+			    	<a href="#">{{ lesson.name}}, {{ lesson.location }}</a>
+			    	<a href="#" @click.prevent="remove(key,lesson.id)">
+			    		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4z"/><path fill="none" d="M0 0h24v24H0V0z"/></svg>
+			    	</a>
 			    </td>
 			  </tr>
 			  <a href="#" @click.stop="addClassState = true" class="add_class">Добавить занятия</a>
@@ -83,7 +96,7 @@
 				      <v-dialog
 				        ref="dialog"
 				        v-model="modal2"
-				        :return-value.sync="time"
+				        :return-value.sync="classStartTime"
 				        persistent
 				        lazy
 				        full-width
@@ -91,20 +104,20 @@
 				      >
 				        <template v-slot:activator="{ on }">
 				          <v-text-field
-				            v-model="time"
+				            v-model="classStartTime"
 				            label="Начало занятий"
 				            v-on="on"
 				          ></v-text-field>
 				        </template>
 				        <v-time-picker
 				          v-if="modal2"
-				          v-model="time"
+				          v-model="classStartTime"
 				          format="24hr"
 				          full-width
 				        >
 				          <v-spacer></v-spacer>
 				          <v-btn flat color="primary" @click="modal2 = false">Отмена</v-btn>
-				          <v-btn flat color="primary" @click="$refs.dialog.save(time)">Выбрать</v-btn>
+				          <v-btn flat color="primary" @click="$refs.dialog.save(classStartTime)">Выбрать</v-btn>
 				        </v-time-picker>
 				      </v-dialog>
 				        <v-menu
@@ -170,51 +183,55 @@
 				second_text: "Adipisicing elit. Praesentium illo veniam architecto.",
 				week: ["Понидельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"],
 				yearSesonName: ["Января","Февраля","Марта","Апреля","Мая","Июня","Июля","Августа","Сентября","Октября","Ноября","Декабря"],
-				lessons: [
-					{
-						day: '12.3.2019',
-						times: ['11:00','13:30'],
-						locations: ['Мат.анализ, ауд. 215, 36012','Теор.вер, 3 курс, 102а']
-					},
-					{
-						day: '14.3.2019',
-						times: ['14:00'],
-						locations: ['Теор.вер, 3 курс, 102а']
-					},
-					{
-						day: '26.3.2019',
-						times: ['17:00'],
-						locations: ['Мат.анализ, ауд. 215, 36012']
-					}
-				],
+				lessons: this.$store.state.lessons,
 				addClassState: false,
 				dateMenu: false,
 				className: '',
 				classLocation: '',
 				classDate: '',
 				classStartTime: '',
-				modal2: false
-			}
-		},
-		created() {
-			let date = new Date();
-			let today = `${date.getDate()}.${date.getMonth()-1}.${date.getFullYear()}`;
-
-			for (var i = 0; i < this.lessons.length; i++) {
-				if(today == this.lessons[i].day){
-					this.lessons[i].day = "Сегодня"
-				}else{
-					this.lessons[i].day = `${this.lessons[i].day.split(".")[0]} ${this.yearSesonName[+this.lessons[i].day.split(".")[1]-1]}`
-				}
+				modal2: false,
+				alertMessage: "some text",
+				message: null
 			}
 		},
 		methods:{
 			changeTime(){
-				console.log(this.classDate)
+				this.message = true;
+				setTimeout(()=>{
+					this.message = null,
+					this.alertMessage = Math.ceil(Math.random(1,10) * 10);
+				},1000)
 			},
 			addClass(){
-				this.lessons.push({day: this.classDate, times: [this.classStartTime], locations: [`${this.className} ауд. ${this.classLocation}`]});
-				this.addClassState = false
+				this.$store.dispatch('addClass',{name: this.className,location: this.classLocation, classStart: this.classStartTime, date: this.classDate})
+				.then((resp)=>{
+					this.alertMessage = resp.toString();
+					this.addClassState = false;
+					setTimeout(()=>{
+						this.alertMessage = null
+					},1500)
+				})
+				.catch((error)=>{
+					this.alertMessage = error;
+				})
+			},
+			remove(index,id){
+				this.$store.dispatch('remove',id)
+				.then((response)=>{
+					this.alertMessage = response;
+					this.message = true;
+					setTimeout(()=>{
+						this.message = null
+					},1500)
+					console.log(this.lessons,index)
+					this.lessons.splice(index,1);
+				}).catch((error)=>{
+					this.alertMessage = error;
+					setTimeout(()=>{
+						this.message = null
+					},1500)
+				})
 			}
 		}	
 	}
