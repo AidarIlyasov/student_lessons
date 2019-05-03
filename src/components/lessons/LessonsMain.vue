@@ -15,8 +15,8 @@
 			<v-flex md4>
 				<v-tabs class="group_list">
 					<v-tabs-slider color="transparent"></v-tabs-slider>
-					<v-tab>Все группы</v-tab>
-					<v-tab>36012</v-tab>
+					<v-tab @click="groupLessons('All')">Все группы</v-tab>
+					<v-tab @click="groupLessons('36012')">36012</v-tab>
 					<v-tab>36203</v-tab>
 					<v-tab>42011М</v-tab>
 					<v-tab>36012</v-tab>
@@ -50,36 +50,38 @@
 			</v-flex>	
 		</v-layout>
 		<v-layout>
-			<table class="lessons_list">
-			  <tr v-for="(lesson,key) in lessons">
-			    <td class="date">{{ lesson.date }}</td>
-			    <td class="day">{{  }}</td>
+			<transition-group name="list" tag="table" class="lessons_list">
+			  <tr v-for="(lesson,key) in lessonsFiltered" class="list-item" :key="key">
+			    <td class="date">{{ lesson.day }} {{ lesson.seasonName}}</td>
+			    <td class="day">{{ lesson.week }}</td>
 			    <td class="time">
 			    	<span>
-				    	<a href="#" @click.prevent="changeTime()">
+				    	<a href="#" @click.prevent="change(key,lesson.id)">
 				    		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
 				    	</a>
 				    	{{ lesson.start }}
 			    	</span>
 			    </td>
 			    <td class="location">
-			    	<a href="#">{{ lesson.name}}, {{ lesson.location }}</a>
-			    	<a href="#" @click.prevent="remove(key,lesson.id)">
-			    		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4z"/><path fill="none" d="M0 0h24v24H0V0z"/></svg>
+			    	<a href="#">{{ lesson.name}}, {{ lesson.location }}
+				    	<i href="#" @click.prevent="remove(key,lesson.id)">
+				    		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4z"/><path fill="none" d="M0 0h24v24H0V0z"/></svg>
+				    	</i>
 			    	</a>
 			    </td>
 			  </tr>
-			  <a href="#" @click.stop="addClassState = true" class="add_class">Добавить занятия</a>
-			</table>
+			</transition-group>
+			<div class="add_class">
+		  		<a href="#" @click.prevent="add()" class="add_class-link">Добавить занятие</a>
+		  	</div>	
 		</v-layout>
 	    <v-layout row justify-center>
-	  
 		      <v-dialog
 		        v-model="addClassState"
 		        max-width="290"
 		      >
 		        <v-card>
-		          <v-card-title class="headline">Добавить занятие</v-card-title>
+		          <v-card-title class="headline">{{ acceptText }} занятие</v-card-title>
 		  
 		          <v-card-text>
 			        <v-flex>
@@ -87,6 +89,11 @@
 			            placeholder="Мат.анализ"
 			            label="Предмет"
 			            v-model="className"
+			          ></v-text-field>
+			          <v-text-field
+			            placeholder="36012а"
+			            label="Группа"
+			            v-model="classGroupName"
 			          ></v-text-field>
 			          <v-text-field
 			            placeholder="201a"
@@ -164,9 +171,9 @@
 		            <v-btn
 		              color="blue darken-1"
 		              flat="flat"
-		              @click="addClass()"
+		              @click="modalAction = modalAction ==  'acceptAdd' ? acceptAdd() : acceptChange()"
 		            >
-		              Добавить
+		              {{ acceptText }}
 		            </v-btn>
 		          </v-card-actions>
 		        </v-card>
@@ -181,35 +188,75 @@
 				date: new Date(),
 				text: "Lorem ipsum dolor sit amet.",
 				second_text: "Adipisicing elit. Praesentium illo veniam architecto.",
-				week: ["Понидельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"],
-				yearSesonName: ["Января","Февраля","Марта","Апреля","Мая","Июня","Июля","Августа","Сентября","Октября","Ноября","Декабря"],
-				lessons: this.$store.state.lessons,
-				addClassState: false,
+				lessons: [],
 				dateMenu: false,
+				addClassState: false,
 				className: '',
 				classLocation: '',
 				classDate: '',
 				classStartTime: '',
+				classId: '',
+				classGroupName: '',
 				modal2: false,
-				alertMessage: "some text",
-				message: null
+				message: null,
+				alertMessage: '',
+				modalAction: 'acceptAdd',
+				acceptText: 'Добавить',
+				modalText: 'Изменить'
 			}
 		},
+		created(){
+			this.$store.dispatch('getLessons')
+			.then((responce)=>{
+				this.lessons = this.$store.getters.lessonsFiltered;
+			}).catch((error)=>{
+				console.log(error)
+			});
+		},
 		methods:{
-			changeTime(){
-				this.message = true;
-				setTimeout(()=>{
-					this.message = null,
-					this.alertMessage = Math.ceil(Math.random(1,10) * 10);
-				},1000)
+			change(index,id){
+				console.log(this.lessons);
+				this.addClassState = true;
+				this.classId = id;
+				this.className = this.lessons[index].name;
+				this.classStartTime = this.lessons[index].start;
+				this.classLocation = this.lessons[index].location;
+				this.classDate = this.lessons[index].date;
+				this.classGroupName = this.lessons[index].group;
+				this.modalAction = 'acceptChange',
+				this.acceptText = 'Изменить'
 			},
-			addClass(){
-				this.$store.dispatch('addClass',{name: this.className,location: this.classLocation, classStart: this.classStartTime, date: this.classDate})
+			acceptChange(){
+				this.$store.dispatch('change',{id: this.classId, name: this.className,location: this.classLocation, classStart: this.classStartTime, date: this.classDate})
 				.then((resp)=>{
-					this.alertMessage = resp.toString();
+					console.log(resp);
+					this.alertMessage = resp;
 					this.addClassState = false;
 					setTimeout(()=>{
-						this.alertMessage = null
+						this.message = null
+					},1500)
+				})
+				.catch((error)=>{
+					this.alertMessage = error;
+				})
+			},
+			add(){
+				this.addClassState = true,
+				this.className =  "",
+				this.classStartTime = "",
+				this.classLocation = "",
+				this.classDate = "",
+				this.modalAction = 'acceptAdd',
+				this.acceptText = 'Добавить';
+			},
+			acceptAdd(){
+				this.$store.dispatch('add',{name: this.className,location: this.classLocation, classStart: this.classStartTime, date: this.classDate, group: this.classGroupName})
+				.then((resp)=>{
+					this.message = true;
+					this.alertMessage = resp;
+					this.addClassState = false;
+					setTimeout(()=>{
+						this.message = null
 					},1500)
 				})
 				.catch((error)=>{
@@ -232,11 +279,21 @@
 						this.message = null
 					},1500)
 				})
+			},
+			groupLessons(index){
+				this.$store.dispatch('updateFilter',index);
 			}
-		}	
+		},
+		computed:{
+			lessonsFiltered(){
+				return this.$store.getters.lessonsFiltered
+			}
+		}
 	}
 </script>
 <style lang="sass">
+	.layout
+		flex-wrap: wrap
 	.group_list
 		a
 			height: 60%;
@@ -275,15 +332,29 @@
 				flex-wrap: wrap
 				align-items: center
 				margin-right: 5px
+				a
+					display: inherit
+					margin-right: 5px
 			svg
 				fill: #1976d2
 		.location
 			font-size: 14px
 			text-decoration: underline
 			a
-				display: block
-		.add_class
+				display: flex
+				i
+					margin-left: 5px
+	.add_class
+		width: 100%
+		&-link
 			text-decoration: underline
 			font-size: 14px
-
+		.list-item
+		  display: table
+		  margin-right: 10px
+		.list-enter-active, .list-leave-active
+		  transition: all .5s;
+		.list-enter, .list-leave-to
+		  opacity: 0
+		  transform: translateX(30px)
 </style>

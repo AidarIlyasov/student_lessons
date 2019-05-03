@@ -13,7 +13,7 @@
 		</v-container>
       <v-container fluid fill-height v-else>
         <v-layout align-center justify-center>
-          <v-flex xs12 sm8 md4>
+          <v-flex xs12 sm8 md4 class="login_form">
             <v-card class="elevation-12">
               <v-toolbar dark color="primary">
                 <v-toolbar-title>Войти в систему</v-toolbar-title>
@@ -89,5 +89,8 @@
 		right: 15px;
 		z-index: 99;
 		background: #fff;
+	}
+	.container .login_form{
+		max-width: 400px;
 	}
 </style>
