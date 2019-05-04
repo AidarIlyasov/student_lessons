@@ -9,7 +9,10 @@ export default new Vuex.Store({
 		token: localStorage.getItem('access_token') || null,
 		created: false,
 		lessons: [],
-		filter: 'All'
+		filter: 'All',
+		week: ["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"],
+		yearSesonName: ["Января","Февраля","Марта","Апреля","Мая","Июня","Июля","Августа","Сентября","Октября","Ноября","Декабря"]
+
 	},
 	mutations:{
 		getLessons(state,payload){
@@ -25,13 +28,13 @@ export default new Vuex.Store({
 		// },
 		getLessons(context){
 			return new Promise((resolve,reject) =>{
-				let week = ["Понидельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"];
-				let yearSesonName = ["Января","Февраля","Марта","Апреля","Мая","Июня","Июля","Августа","Сентября","Октября","Ноября","Декабря"];
 				let result = [];
 				db.collection("lessons").get().then((querySnapshot)=>{
 					querySnapshot.forEach((doc,index)=>{
 						let data = doc.data();
-						// let sesonNum = data.date.split("-")[1] == 10 ? 10 : data.date.split("-")[1].replace('0','',1);
+						let sesonNum = data.date.split("-")[1] == 10 ? 10 : data.date.split("-")[1].replace('0','',1);
+						let weekDay = new Date(data.date).getDay()+1 == 7 ? 0 : new Date(data.date).getDay()+1;
+
 						let leson = {
 							name: data.name,
 							id: doc.id,
@@ -39,8 +42,9 @@ export default new Vuex.Store({
 							start: data.start,
 							date: data.date,
 							day: data.date.split("-")[2],
-							seasonName: yearSesonName[4],
-							group: data.group
+							seasonName: context.state.yearSesonName[sesonNum],
+							group: data.group,
+							week: context.state.week[weekDay]
 						};
 				        result.push(leson);
 					})
@@ -64,7 +68,18 @@ export default new Vuex.Store({
 					date: payload.date,
 					group: payload.group
 				}).then(()=>{
-					console.log("Document successfully added!");
+					let sesonNum = payload.date.split("-")[1] == 10 ? 10 : payload.date.split("-")[1].replace('0','',1);
+					let weekDay = new Date(payload.date).getDay()+1 == 7 ? 0 : new Date(payload.date).getDay()+1;
+					context.state.lessons.push({
+						name: payload.name,
+						location: payload.location,
+						start: payload.classStart,
+						date: payload.date,
+						group: payload.group,
+						day: payload.date.split("-")[2],
+						seasonName: context.state.yearSesonName[sesonNum],
+						week: context.state.week[weekDay]
+					});
 					resolve("Урок был добавлен");
 				}).catch((error) =>{
 				    console.error("Error adding document: ", error);
@@ -111,6 +126,15 @@ export default new Vuex.Store({
 	      } else{
 	      		return state.lessons.filter(item => item.group == state.filter)
 	      }
+	    },
+	    getGroups(state){
+	    	let arr = [];
+	    	state.lessons.forEach(function(item,index){
+	    		if(arr.indexOf(item) == -1 && item != undefined){
+	    			arr.push(item.group)
+	    		}
+	    	});
+	    	return arr;
 	    }
 	}
 })
