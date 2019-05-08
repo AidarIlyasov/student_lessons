@@ -1,5 +1,15 @@
 <template>
-	<v-app id="app" v-on:message="message">
+	<v-app id="app">
+		<v-alert v-show="alertMessage"
+	      :value="true"
+	      color="success"
+	      icon="check_circle"
+	      outline
+	      transition="slide-x-transition"
+	      class="alert_message"
+	    >
+	    {{ alertMessage }}
+	    </v-alert>
 		<v-container v-if="logged">
 			<v-layout row wrap>
 				<v-tabs fixed-tabs slider-color="blue">
@@ -54,10 +64,14 @@
 				this.$router.push({name: 'LessonsMain'});
 				this.logged = true;
 				this.$store.dispatch('getLessons')
-			},
-			message(){
-				console.log('data');
-				this.alertMessage = true;
+			}
+		},
+		computed:{
+			alertMessage(){
+				setTimeout(()=>{
+					this.$store.state.message = ''
+				},2000);
+				return this.$store.state.message;
 			}
 		}
 	}
@@ -84,8 +98,8 @@
 	    height: 100%;
 	    justify-content: center;
 	}
-	.success_alert{
-		position: absolute;
+	.alert_message{
+		position: fixed;
 		right: 15px;
 		z-index: 99;
 		background: #fff;

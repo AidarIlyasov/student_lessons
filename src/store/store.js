@@ -8,6 +8,7 @@ export default new Vuex.Store({
 	state:{
 		token: localStorage.getItem('access_token') || null,
 		created: false,
+		message: '',
 		lessons: [],
 		filter: 'All',
 		week: ["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"],
@@ -18,8 +19,11 @@ export default new Vuex.Store({
 		getLessons(state,payload){
 			state.lessons = payload;
 		},
-	    updateFilter(state, payload) {
+	    updateFilter(state, payload){
 		    state.filter = payload;
+	    },
+	    showMessage(state, payload){
+	    	state.message = payload;
 	    }
 	},
 	actions:{
@@ -60,58 +64,48 @@ export default new Vuex.Store({
 		}
 		,
 		add(context,payload){
-			return new Promise((resolve, reject) => {
-				db.collection("lessons").add({
+			db.collection("lessons").add({
+				name: payload.name,
+				location: payload.location,
+				start: payload.classStart,
+				date: payload.date,
+				group: payload.group
+			}).then(()=>{
+				let sesonNum = payload.date.split("-")[1] == 10 ? 10 : payload.date.split("-")[1].replace('0','',1);
+				let weekDay = new Date(payload.date).getDay()+1 == 7 ? 0 : new Date(payload.date).getDay()+1;
+				context.state.lessons.push({
 					name: payload.name,
 					location: payload.location,
 					start: payload.classStart,
 					date: payload.date,
-					group: payload.group
-				}).then(()=>{
-					let sesonNum = payload.date.split("-")[1] == 10 ? 10 : payload.date.split("-")[1].replace('0','',1);
-					let weekDay = new Date(payload.date).getDay()+1 == 7 ? 0 : new Date(payload.date).getDay()+1;
-					context.state.lessons.push({
-						name: payload.name,
-						location: payload.location,
-						start: payload.classStart,
-						date: payload.date,
-						group: payload.group,
-						day: payload.date.split("-")[2],
-						seasonName: context.state.yearSesonName[sesonNum],
-						week: context.state.week[weekDay]
-					});
-					resolve("Урок был добавлен");
-				}).catch((error) =>{
-				    console.error("Error adding document: ", error);
-				    reject(error)
+					group: payload.group,
+					day: payload.date.split("-")[2],
+					seasonName: context.state.yearSesonName[sesonNum],
+					week: context.state.week[weekDay]
 				});
-			})
+				context.commit('showMessage','Урок был успешно добавлен');
+			}).catch((error) =>{
+			    context.commit('showMessage','Error adding document:' + error);
+			});
 		},
 		remove(context,payload){
-			return new Promise((resolve,reject)=>{
-				db.collection("lessons").doc(payload).delete().then(()=>{
-					console.log("Document successfully deleted!");
-					resolve("Урок был удален");
-				}).catch((error)=>{
-					console.error("Error delete document: ", error);
-					reject(error)
-				})
+			db.collection("lessons").doc(payload).delete().then(()=>{
+				context.commit('showMessage','Урок был удален');
+			}).catch((error)=>{
+				context.message(error);
+				context.commit('showMessage','Error delete document: ' + error);
 			})
 		},
 		change(context,payload){
-			return new Promise((resolve,reject)=>{
-				db.collection("lessons").doc(payload.id).update({
-					name: payload.name,
-					location: payload.location,
-					start: payload.classStart,
-					date: payload.date
-				}).then(()=>{
-					console.log("Document successfully changeed!");
-					resolve("Урок был изменен");
-				}).catch((error)=>{
-					console.error("Error change document: ", error);
-					reject(error)
-				})
+			db.collection("lessons").doc(payload.id).update({
+				name: payload.name,
+				location: payload.location,
+				start: payload.classStart,
+				date: payload.date
+			}).then(()=>{
+				context.commit('showMessage','Урок был изменен');
+			}).catch((error)=>{
+				context.commit('showMessage','Error change document: ' + error);
 			})
 		}
 	},

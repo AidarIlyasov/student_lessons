@@ -1,15 +1,5 @@
 <template>
 	<v-container>
-		<v-alert v-show="message"
-	      :value="true"
-	      color="success"
-	      icon="check_circle"
-	      outline
-	      transition="slide-x-transition"
-	      class="success_alert"
-	    >
-	    {{ alertMessage }}
-	    </v-alert>
 		<v-layout row wrap>
 			<!-- <h1>Lessons Main</h1> -->
 			<v-flex md4>
@@ -31,6 +21,9 @@
 	import lessonsItem from './lessonsItem'
 
 	export default {
+		components:{
+			lessonsItem
+		},
 		data(){
 			return {
 				text: "Lorem ipsum dolor sit amet.",
@@ -42,6 +35,9 @@
 		methods:{
 			groupLessons(index){
 				this.$store.dispatch('updateFilter',index);
+			},
+			showMessage(response){
+				alert(response);
 			}
 		},
 		computed:{
@@ -109,12 +105,11 @@
 		&-link
 			text-decoration: underline
 			font-size: 14px
-		.list-item
-		  display: table
-		  margin-right: 10px
-		.list-enter-active, .list-leave-active
-		  transition: all .5s;
-		.list-enter, .list-leave-to
-		  opacity: 0
-		  transform: translateX(30px)
+	.list-item
+	  margin-right: 10px
+	.list-enter-active, .list-leave-active
+	  transition: all .5s;
+	.list-enter, .list-leave-to
+	  opacity: 0
+	  transform: translateX(30px)
 </style>

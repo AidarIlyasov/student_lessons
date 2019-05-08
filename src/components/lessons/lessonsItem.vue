@@ -169,18 +169,8 @@
 				this.acceptText = 'Изменить'
 			},
 			acceptChange(){
-				this.$store.dispatch('change',{id: this.classId, name: this.className,location: this.classLocation, classStart: this.classStartTime, date: this.classDate})
-				.then((resp)=>{
-					console.log(resp);
-					this.alertMessage = resp;
-					this.addClassState = false;
-					setTimeout(()=>{
-						this.message = null
-					},1500)
-				})
-				.catch((error)=>{
-					this.alertMessage = error;
-				})
+				this.$store.dispatch('change',{id: this.classId, name: this.className,location: this.classLocation, classStart: this.classStartTime, date: this.classDate});
+				this.addClassState = false;
 			},
 			add(){
 				this.addClassState = true,
@@ -192,35 +182,12 @@
 				this.acceptText = 'Добавить';
 			},
 			acceptAdd(){
-				this.$store.dispatch('add',{name: this.className,location: this.classLocation, classStart: this.classStartTime, date: this.classDate, group: this.classGroupName})
-				.then((resp)=>{
-					this.message = true;
-					this.alertMessage = resp;
-					this.addClassState = false;
-					setTimeout(()=>{
-						this.message = null
-					},1500)
-				})
-				.catch((error)=>{
-					this.alertMessage = error;
-				})
+				this.$store.dispatch('add',{name: this.className,location: this.classLocation, classStart: this.classStartTime, date: this.classDate, group: this.classGroupName});
+				this.addClassState = false;
 			},
 			remove(index,id){
 				this.$store.dispatch('remove',id)
-				.then((response)=>{
-					this.alertMessage = response;
-					this.message = true;
-					setTimeout(()=>{
-						this.message = null
-					},1500)
-					console.log(this.lessons,index)
-					this.lessons.splice(index,1);
-				}).catch((error)=>{
-					this.alertMessage = error;
-					setTimeout(()=>{
-						this.message = null
-					},1500)
-				})
+				this.$store.state.lessons.splice(index,1);
 			}
 		},
 		computed:{
