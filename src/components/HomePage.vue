@@ -2,7 +2,7 @@
 	<v-app id="app">
 		<v-alert v-show="alertMessage"
 	      :value="true"
-	      color="success"
+	      :color="color"
 	      icon="check_circle"
 	      outline
 	      transition="slide-x-transition"
@@ -10,7 +10,7 @@
 	    >
 	    {{ alertMessage }}
 	    </v-alert>
-		<v-container v-if="logged">
+		<v-container v-if="authStatus">
 			<v-layout row wrap>
 				<v-tabs fixed-tabs slider-color="blue">
 					<v-tab><router-link to="/LessonsMain">Расписание</router-link></v-tab>
@@ -37,7 +37,7 @@
               </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="primary" @click="login()">Войти</v-btn>
+                <v-btn color="primary" @click="signIn()">Войти</v-btn>
               </v-card-actions>
             </v-card>
           </v-flex>
@@ -49,29 +49,36 @@
 	export default {
 		data(){
 			return {
-				email: '',
-				password: '',
-				logged: false
+				email: 'root@mail.ru',
+				password: '123456',
+				color: 'success'
 			}
 		},
 		methods:{
-			login(){
-				// this.$store.dispatch('retrieveToken',{
-				// 	email: this.email,
-				// 	password: this.password
-				// });
-				
-				this.$router.push({name: 'LessonsMain'});
-				this.logged = true;
-				this.$store.dispatch('getLessons')
+			signIn(){
+				this.$store.dispatch('signIn',{email: this.email,password: this.password}).then(()=>{
+					this.$router.push({name: 'LessonsMain'});
+				}).catch((error)=>{
+					this.$store.state.message = error
+				})
 			}
 		},
 		computed:{
 			alertMessage(){
 				setTimeout(()=>{
-					this.$store.state.message = ''
+					this.$store.state.message.message = '';
+					this.color = 'success'
 				},2000);
-				return this.$store.state.message;
+
+				this.color = this.$store.state.message.type;
+				return this.$store.state.message.message;
+			},
+			authStatus(){
+				console.log(this.$store.getters.authStatus);
+				if(this.$store.getters.authStatus){
+					this.$router.push({name: 'LessonsMain'});
+					return this.$store.getters.authStatus
+				}
 			}
 		}
 	}

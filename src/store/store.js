@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import userModule from './user'
 import {db} from './firebaseConfig'
 
 Vue.use(Vuex);
@@ -8,7 +9,7 @@ export default new Vuex.Store({
 	state:{
 		token: localStorage.getItem('access_token') || null,
 		created: false,
-		message: '',
+		message: {message: '', type: 'success'},
 		lessons: [],
 		filter: 'All',
 		week: ["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"],
@@ -23,13 +24,14 @@ export default new Vuex.Store({
 		    state.filter = payload;
 	    },
 	    showMessage(state, payload){
-	    	state.message = payload;
-	    }
+	    	state.message.message = payload.message;
+	    	state.message.type = payload.type;
+	    },
+		retrieveToken(state,payload){
+			localStorage.setItem('access_token',payload);
+		}
 	},
 	actions:{
-		// retrieveToken(context,payload){
-		// 	console.log(payload.email, payload.password)
-		// },
 		getLessons(context){
 			return new Promise((resolve,reject) =>{
 				let result = [];
@@ -83,17 +85,17 @@ export default new Vuex.Store({
 					seasonName: context.state.yearSesonName[sesonNum],
 					week: context.state.week[weekDay]
 				});
-				context.commit('showMessage','Урок был успешно добавлен');
+				context.commit('showMessage',{message: 'Урок был успешно добавлен',type: 'success'});
 			}).catch((error) =>{
-			    context.commit('showMessage','Error adding document:' + error);
+			    context.commit('showMessage',{message: 'Error adding document:' + error, type: 'error'});
 			});
 		},
 		remove(context,payload){
 			db.collection("lessons").doc(payload).delete().then(()=>{
-				context.commit('showMessage','Урок был удален');
+				context.commit('showMessage',{message: 'Урок был удален', type: 'success'});
 			}).catch((error)=>{
 				context.message(error);
-				context.commit('showMessage','Error delete document: ' + error);
+				context.commit('showMessage',{message: 'Error delete document: ' + error, type: 'error'});
 			})
 		},
 		change(context,payload){
@@ -103,17 +105,13 @@ export default new Vuex.Store({
 				start: payload.classStart,
 				date: payload.date
 			}).then(()=>{
-				context.commit('showMessage','Урок был изменен');
+				context.commit('showMessage',{message: 'Урок был изменен', type: 'success'});
 			}).catch((error)=>{
-				context.commit('showMessage','Error change document: ' + error);
+				context.commit('showMessage',{message: 'Error change document: ' + error, type: 'error'});
 			})
 		}
 	},
 	getters:{
-		// getLessons(state){
-		// 	// console.log(`getters info => ${state.lessons}`);
-		// 	return state.lessons;
-		// },
 	    lessonsFiltered(state) {
 	      if (state.filter == 'All') {
 	        	return state.lessons
@@ -129,6 +127,13 @@ export default new Vuex.Store({
 	    		}
 	    	});
 	    	return arr;
+	    },
+	    authStatus(state){
+	    	console.log(state);
+	    	return state.userModule.authStatus || state.token ? true : false
 	    }
+	},
+	modules:{
+	  userModule
 	}
 })
