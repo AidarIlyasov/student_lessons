@@ -13,6 +13,12 @@
 			</v-flex>	
 		</v-layout>
 		<v-layout row>
+			<v-progress-circular
+			  v-if="!this.$store.state.created"
+			  indeterminate
+			  color="primary"
+			  style="margin: 25px 25px 0 0"		  
+			></v-progress-circular>
 			<lessons-item></lessons-item>
 		</v-layout>
 	</v-container>	
@@ -112,4 +118,5 @@
 	.list-enter, .list-leave-to
 	  opacity: 0
 	  transform: translateX(30px)
+	
 </style>

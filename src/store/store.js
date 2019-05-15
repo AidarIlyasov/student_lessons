@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import userModule from './user'
+import studentsModule from './students'
 import {db} from './firebaseConfig'
 
 Vue.use(Vuex);
@@ -13,7 +14,8 @@ export default new Vuex.Store({
 		lessons: [],
 		filter: 'All',
 		week: ["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"],
-		yearSesonName: ["Января","Февраля","Марта","Апреля","Мая","Июня","Июля","Августа","Сентября","Октября","Ноября","Декабря"]
+		yearSesonName: ["Января","Февраля","Марта","Апреля","Мая","Июня","Июля","Августа","Сентября","Октября","Ноября","Декабря"],
+		loading: true,
 
 	},
 	mutations:{
@@ -121,19 +123,22 @@ export default new Vuex.Store({
 	    },
 	    getGroups(state){
 	    	let arr = [];
-	    	state.lessons.forEach(function(item,index){
+	    	state.lessons.forEach((item,index) => {
 	    		if(arr.indexOf(item) == -1 && item != undefined){
 	    			arr.push(item.group)
 	    		}
 	    	});
 	    	return arr;
 	    },
+	    getSubjects(state){
+	    	return state.lessons.map((item) => item.name);
+	    },
 	    authStatus(state){
-	    	console.log(state);
 	    	return state.userModule.authStatus || state.token ? true : false
 	    }
 	},
 	modules:{
-	  userModule
+	  userModule,
+	  studentsModule
 	}
 })

@@ -5,14 +5,15 @@
 			<v-flex md4>
 				<v-tabs class="group_list">
 					<v-tabs-slider color="transparent"></v-tabs-slider>
-					<v-tab>Все группы</v-tab>
-				</v-tabs>
+                    <v-tab @click="setActiveGroup(0,'All')">Все группы</v-tab>
+                    <v-tab v-for="(group,key) in groups" class="list-item" :key="key" @click="setActiveGroup(key+1,group)">
+                        {{ group }}
+                    </v-tab>				
+                </v-tabs>
 			</v-flex>	
 	    	<v-flex xs12 sm6 md2 d-flex>
-	    	  <v-select
-	    	    :items="subjects"
-	    	    :value="subjects[0]" class="class_select"
-	    	  ></v-select>
+            <v-select v-model="selected" :value="subjects[0]" v-bind:items="subjects" v-on:input="selectSubject"> 
+            </v-select>
 	    	</v-flex>
 		</v-layout>
       
@@ -20,24 +21,16 @@
 		<v-layout>
 		 <table class="group_status">
 		   <tr>
-		   	<th colspan="31">Май</th>
-		   	<th colspan="16">Апрель</th>
+		   	<th ></th>
+                  <th :colspan="ze[key]" v-for="(name,key) in ze,mounthName" class="last_day">
+                        {{name}}
+                  </th>
 		   </tr>
 		   <tr class="day_week">
 		   	   <td></td>
-			   <td v-for="(day,key) in mounth">{{ day }}</td>
-			   <td class="last_day">30</td>  
-			   <td>1</td>
-	  		   <td>9</td>
-			   <td>10</td>
-			   <td>11</td>
-			   <td>12</td>
-			   <td>13</td>
-			   <td>14</td>
-			   <td>15</td>
-			   <td>16</td>
-			   <td>17</td>
-			   <td>18</td>
+			   <td v-for="(day,key) in mounth" :class="dividingLine == day ? 'last_day' : ''">
+                    {{day}}
+                 </td>
 		   </tr>
 			<tr v-for="(value,key) in createfild">
 				<td>{{value.name}}</td>
@@ -46,76 +39,134 @@
 					</td>
 			</tr>
 		   </table>
-		</v-layout>    
+		</v-layout>
+    <v-dialog
+    v-model="modaAddStudent"
+    max-width="290">
+        <v-card>
+            <v-card-title class="headline">Добавить студента</v-card-title>
+            <v-card-text>     
+              <v-flex>
+                <v-text-field
+                label="Имя"
+                v-model="sudentName"
+                ></v-text-field>
+                <v-text-field
+                label="Фамилия"
+                v-model="sudentSecondName"
+                ></v-text-field>
+                <v-text-field
+                label="Группа"
+                v-model="studentGroup"
+                ></v-text-field>
+              </v-flex>      
+            </v-card-text>
+            <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn
+                    color="blue darken-1"
+                    flat="flat"
+                    @click="modaAddStudent = false"
+                    >
+                    Отменить
+                </v-btn>
+                <v-btn
+                  color="blue darken-1"
+                  flat="flat"
+                  @click="acceptAdd"
+                  >
+                  Добавить
+                </v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
+        <div>
+          <v-btn style="margin: 10px 0 0" small color="primary" @click="addSudent()">Добавить студента</v-btn>
+        </div>    
 	</v-container>
 </template>
 <script>
 	export default {
+        created(){
+            this.$store.dispatch('getStudentsStatus');
+        },
 		data(){
 			return{
-      			subjects: ['Мат.Анализ', 'Русский-язык', 'Физика', 'Культура'],
-      			students: [
-      				{
-      					name: 'Иван Иванов',
-      					group: '3716a',
-      					ratings: {
-      						day: ['18.04.2019','27.04.2019'],
-      						value: [5,3],
-      						// subject: 'Мат.Анализ'
-      					}
-      				},
-      				{
-      					name: 'Пётр Петров',
-      					group: '3221',
-      					ratings: {
-      						day: ['14.04.2019'],
-      						value: [4],
-      						// subject: 'Русский-язык'
-      					}
-      				},
-					{
-      					name: 'Кобылкин Андрей',
-      					group: '3221',
-      					ratings: {
-      						day: ['14.04.2019','15.04.2019','20.04.2019','21.04.2019','23.04.2019'],
-      						value: [4,3,4,5,3],
-      						// subject: 'Русский-язык'
-      					}
-      				}
-      			],
+      			subjects: this.$store.getters.getSubjects,
+                students: this.$store.state.studentsModule.students,
       			ratings:  [],
-      			mounthName: {}
+      			mounthName: [],
+      			dates: [],
+                monthLength: [],
+                ze: [],
+                selected: 'Мат.Анализ',
+                activeGroup: 0,
+                modaAddStudent: false,
+                sudentName: '',
+                sudentSecondName: '',
+                studentGroup: ''
       		}
       	},
       	methods:{
       		check(day){
-      			console.log(day);
-      		}
+      		},
+            selectSubject(){
+                let filtredSubjects = [];
+                this.students.forEach((item)=>{
+                    if(item.ratings.subject == this.selected){
+                        filtredSubjects.push(item)
+                    }
+                })
+                // console.log(this.selected);
+                // console.log(filtredSubjects)
+            },
+            setActiveGroup(name,index){
+                this.activeGroup = index;
+                console.log(num)
+            },
+            addSudent(){
+                this.modaAddStudent = true;
+            },
+            acceptAdd(){
+                this.$store.dispatch('addSudent',{name: this.sudentName, secondName: this.sudentSecondName, group: this.studentGroup});
+                modaAddStudent = false
+            }
       	},
       	computed:{
       		gruopFilter(){
 
       		},
       		mounth(){
-
       			let result = [];
+      			let test = [];
+                console.log(this.students);
       			this.students.forEach((item) => {
       				item.ratings.day.map((d) => {
-      					let day = d.split('.')[0];
-
-      					if (result.indexOf(day) == -1){ result.push(day) }
+      					let day = d.split('.').reverse().join('.');
+      					let p = new Date(day).getTime();
+      					if (result.indexOf(p) == -1){ result.push(p) }
       				});
       			});
-      			return result.sort((a,b)=> a-b);
+      			result.sort((a,b)=> a-b);
+
+      			return result.map((milliseconds)=>{
+      				let date = new Date(milliseconds);
+      				this.dates.push(`${date.getDate()}.${date.getMonth()+1}.${date.getFullYear()}`);
+
+      				if(this.mounthName.indexOf(this.$store.state.yearSesonName[date.getMonth()]) == -1){
+      					this.mounthName.push(this.$store.state.yearSesonName[date.getMonth()]); // Название месяца
+      				}
+                    this.monthLength.push(date.getMonth()+1);
+      				return date.getDate();
+      			});
       		},
       		createfild(){
       			let result = [];
       			this.students.forEach((item)=> {
-      				let days = item.ratings.day.map((el)=>el.split('.')[0]) // дни полученных оценок студентов
-
+      				let days = item.ratings.day.map((el)=>{return el}) // дни полученных оценок студентов
       				let indexs = [];
       				let k = 0;
-      				this.mounth.forEach((v,i)=> {
+      				this.dates.forEach((v,i)=> {
       					if(days.indexOf(v) != -1){
       						indexs.push(item.ratings.value[k]);
       						k++;
@@ -126,8 +177,28 @@
 
       				result.push({name: item.name,value: indexs}); // добавляем имя студента в каждый массив оценок
       			});
+                    let count = 0;
+                    let currentDate = 0;
+
+                    for (var i = 0; i < this.monthLength.length+1; i++) {
+                          if(this.monthLength[i] == currentDate){
+                                count++; 
+                          }else{
+                               this.ze.push(count+1);
+                               currentDate = this.monthLength[i]; 
+                               count = 0;
+                          }
+                    }
+                    this.ze.splice(0,1);
+
       			return result;
-      		}
+      		},
+            dividingLine(){
+                  return 23
+            },
+            groups(){
+                return this.$store.getters.getGroups
+            }
       	}		
 	}
 </script>

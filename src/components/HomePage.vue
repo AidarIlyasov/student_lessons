@@ -74,7 +74,6 @@
 				return this.$store.state.message.message;
 			},
 			authStatus(){
-				console.log(this.$store.getters.authStatus);
 				if(this.$store.getters.authStatus){
 					this.$router.push({name: 'LessonsMain'});
 					return this.$store.getters.authStatus
