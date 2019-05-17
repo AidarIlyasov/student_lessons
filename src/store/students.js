@@ -3,18 +3,23 @@ import {db} from './firebaseConfig'
 
 export default ({
 	state: {
-		students: []
+		students: [],
+		subjectFilter: 'All'
 	},
 	mutations: {
 		getStudents(state,payload){
 			state.students = payload;
+		},
+		subjectsFilter(state,payload){
+			state.subjectFilter = payload
 		}
 	},
 	actions:{
 		addSudent(context,payload){
 			db.collection("students").add({
 				name: `${payload.name} ${payload.secondName}`,
-				group: payload.group
+				group: payload.group,
+				subject: payload.subject
 			})
 			.then(() => {
 				context.commit('showMessage',{message: 'Студент был успешно добавлен',type: 'success'});
@@ -39,11 +44,22 @@ export default ({
       				};
       				result.push(student);
 				})
-			})	
+			}).catch((error)=>{
+				console.log(error)
+			})
 			context.commit('getStudents', result);
 		}
 	},
 	getters:{
-		// Фильтры по предмету, по группе, возможно по оценкам
+	// Фильтры по предмету, по группе, возможно по оценкам
+		filtredSubjects(state){
+			if(state.subjectFilter == 'All'){
+				return state.students
+			}else{
+				return state.students.filter((item) => {
+					return item.ratings.subject == state.subjectFilter;
+				})
+			}
+        }
 	}
 })

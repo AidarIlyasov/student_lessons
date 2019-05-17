@@ -22,13 +22,13 @@
 		 <table class="group_status">
 		   <tr>
 		   	<th ></th>
-                  <th :colspan="ze[key]" v-for="(name,key) in ze,mounthName" class="last_day">
+                  <th :colspan="ze[key]" v-for="(name,key) in ze,monthName" class="last_day">
                         {{name}}
                   </th>
 		   </tr>
 		   <tr class="day_week">
 		   	   <td></td>
-			   <td v-for="(day,key) in mounth" :class="dividingLine == day ? 'last_day' : ''">
+			   <td v-for="(day,key) in month" :class="dividingLine == day ? 'last_day' : ''">
                     {{day}}
                  </td>
 		   </tr>
@@ -88,14 +88,13 @@
 <script>
 	export default {
         created(){
-            this.$store.dispatch('getStudentsStatus');
+            this.$store.dispatch('getStudentsStatus')
         },
 		data(){
 			return{
       			subjects: this.$store.getters.getSubjects,
-                students: this.$store.state.studentsModule.students,
       			ratings:  [],
-      			mounthName: [],
+      			monthName: [],
       			dates: [],
                 monthLength: [],
                 ze: [],
@@ -111,14 +110,7 @@
       		check(day){
       		},
             selectSubject(){
-                let filtredSubjects = [];
-                this.students.forEach((item)=>{
-                    if(item.ratings.subject == this.selected){
-                        filtredSubjects.push(item)
-                    }
-                })
-                // console.log(this.selected);
-                // console.log(filtredSubjects)
+                this.$store.commit('subjectsFilter',this.selected);
             },
             setActiveGroup(name,index){
                 this.activeGroup = index;
@@ -128,24 +120,27 @@
                 this.modaAddStudent = true;
             },
             acceptAdd(){
-                this.$store.dispatch('addSudent',{name: this.sudentName, secondName: this.sudentSecondName, group: this.studentGroup});
-                modaAddStudent = false
+                this.$store.dispatch('addSudent',{name: this.sudentName, secondName: this.sudentSecondName, group: this.studentGroup, subject: this.selected});
+                this.modaAddStudent = false
             }
       	},
       	computed:{
-      		gruopFilter(){
-
-      		},
-      		mounth(){
+            students(){
+                return this.$store.getters.filtredSubjects;
+            },
+      		month(){
       			let result = [];
-      			let test = [];
-                console.log(this.students);
+      			let test = [];          
       			this.students.forEach((item) => {
-      				item.ratings.day.map((d) => {
-      					let day = d.split('.').reverse().join('.');
-      					let p = new Date(day).getTime();
-      					if (result.indexOf(p) == -1){ result.push(p) }
-      				});
+
+                    if(item.ratings){
+          				item.ratings.day.map((d) => {
+          					let day = d.split('.').reverse().join('.');
+          					let p = new Date(day).getTime();
+          					if (result.indexOf(p) == -1){ result.push(p) }
+          				});
+                    }
+
       			});
       			result.sort((a,b)=> a-b);
 
@@ -153,8 +148,8 @@
       				let date = new Date(milliseconds);
       				this.dates.push(`${date.getDate()}.${date.getMonth()+1}.${date.getFullYear()}`);
 
-      				if(this.mounthName.indexOf(this.$store.state.yearSesonName[date.getMonth()]) == -1){
-      					this.mounthName.push(this.$store.state.yearSesonName[date.getMonth()]); // Название месяца
+      				if(this.monthName.indexOf(this.$store.state.yearSesonName[date.getMonth()]) == -1){
+      					this.monthName.push(this.$store.state.yearSesonName[date.getMonth()]); // Название месяца
       				}
                     this.monthLength.push(date.getMonth()+1);
       				return date.getDate();
@@ -163,17 +158,19 @@
       		createfild(){
       			let result = [];
       			this.students.forEach((item)=> {
-      				let days = item.ratings.day.map((el)=>{return el}) // дни полученных оценок студентов
-      				let indexs = [];
-      				let k = 0;
-      				this.dates.forEach((v,i)=> {
-      					if(days.indexOf(v) != -1){
-      						indexs.push(item.ratings.value[k]);
-      						k++;
-      					}else{
-      						indexs.push(undefined);
-      					}
-      				});  // индексы дней оценок, относительно построенного массива месяца 
+                    if(item.ratings){                    
+          				let days = item.ratings.day.map((el)=>{return el}) // дни полученных оценок студентов
+          				let indexs = [];
+          				let k = 0;
+          				this.dates.forEach((v,i)=> {
+          					if(days.indexOf(v) != -1){
+          						indexs.push(item.ratings.value[k]);
+          						k++;
+          					}else{
+          						indexs.push(undefined);
+          					}
+          				});  // индексы дней оценок, относительно построенного массива месяца 
+                    }
 
       				result.push({name: item.name,value: indexs}); // добавляем имя студента в каждый массив оценок
       			});
@@ -194,11 +191,12 @@
       			return result;
       		},
             dividingLine(){
-                  return 23
+                  // return 
             },
             groups(){
                 return this.$store.getters.getGroups
-            }
+            },
+
       	}		
 	}
 </script>
